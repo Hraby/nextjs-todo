@@ -17,4 +17,5 @@ If the port is empty, the application will run on [localhost:3000](http://localh
 
 ## Resources
 <b>ReactJS</b> : Refer to [reactjs website](https://reactjs.org/) to understand the concepts of ReactJS
-<br><b>NextJS</b> : Refer to [nextjs website](https://nextjs.org/docs) to  learn about Next.js features and API
+<br><b>NextJS</b> : Refer to [nextjs website](https://nextjs.org/docs) to learn about Next.js features and API
+<br><b>NextUI</b> : Sick animated components for NextJS, more on [nextui website](https://nextui.org/docs/guide/introduction)

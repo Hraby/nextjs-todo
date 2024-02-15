@@ -1,4 +1,4 @@
-# Notion Clone built on NextJS
+# NextJS 14 Todo
 
 ## Installation:
 Clone the project, using git or download it directly, into local environment

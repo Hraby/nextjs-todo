@@ -1,8 +1,37 @@
-import {ProgressCircle} from "@/components/progress-circle"
-import {Button} from "@nextui-org/react";
-import {Input} from "@nextui-org/react";
+import { prisma } from "@/db";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input";
+import { revalidatePath } from "next/cache";
+import { Pencil, Trash2 } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { addTodo } from "@/lib/db";
 
-export default function Home() {
+async function fetchData(){
+  const data = await fetch("http://localhost:3000/api/todos")
+  return await data.json()
+}
+
+export default async function Home() {
+  const data = await fetchData()
+
+  async function createPost(formData: FormData){
+    "use server"
+
+    const todoText = formData.get("todoText")
+    if (todoText) {
+      const todo = await addTodo(todoText.toString())
+      console.log(todo);
+    }
+    revalidatePath("/");
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center">
       <div className="container mx-auto flex justify-between py-4">
@@ -13,17 +42,31 @@ export default function Home() {
         </div>
       </div>
       <div className="max-w-5xl w-full flex flex-col items-center">
-        <div className="flex mx-auto items-center gap-x-8">
-          <h1 className="text-xl mx-auto">Dnešní Todo</h1>
-          <ProgressCircle totalTasks={4} completedTasks={1}/>
-        </div>
         <div className="max-w-5xl mt-4 flex mx-auto">
-          <form action="#" method="POST" className="flex items-center gap-x-4">
-            <Input variant="bordered" type="text" label="Todo"/>
-            <Button color="secondary">Add Todo</Button>
+          <form action={createPost} className="flex items-center gap-x-4">
+            <Input name="todoText" type="text"/>
+            <Button color="secondary" type="submit">Add Todo</Button>
           </form>
         </div>
       </div>
+      <Table className="mt-8 mx-auto max-w-5xl w-full">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Todo</TableHead>
+            <TableHead className="text-right w-[0px]"></TableHead>
+            <TableHead className="text-right w-[0px]"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.map((todo: any, index: number) => (
+          <TableRow key={index}>
+            <TableCell className="font-medium">{todo.message}</TableCell>
+            <TableCell className="text-right"><Pencil/></TableCell>
+            <TableCell className="text-right"><Trash2 /></TableCell>
+          </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </main>
   );
 }

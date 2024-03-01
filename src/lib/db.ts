@@ -16,5 +16,17 @@ export async function delTodo(todoId: string){
             id: parseInt(todoId)
         },
     });
-    if(todo) return {todo};
+    if(todo) return null;
+}
+
+export async function editTodo(todoId: string, todoText: string){
+    const todo = await prisma.todo.update({
+        where: {
+            id: parseInt(todoId)
+        },
+        data: {
+            message: todoText,
+        },
+    });
+    if(todo) return null;
 }

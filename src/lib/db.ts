@@ -7,7 +7,8 @@ export async function addTodo(todoText: string){
           message: todoText.toString()
         },
     });
-    if(todo) return {todo};
+    if(!todo) return null;
+    return todo;
 }
 
 export async function delTodo(todoId: string){
@@ -16,7 +17,8 @@ export async function delTodo(todoId: string){
             id: parseInt(todoId)
         },
     });
-    if(todo) return null;
+    if(!todo) return null;
+    return todo;
 }
 
 export async function editTodo(todoId: string, todoText: string){
@@ -28,5 +30,22 @@ export async function editTodo(todoId: string, todoText: string){
             message: todoText,
         },
     });
-    if(todo) return null;
+    if(!todo) return null;
+    return todo;
+}
+
+export async function getTodos(){
+    const todos = await prisma.todo.findMany({})
+    if(!todos) return null;
+    return todos;
+}
+
+export async function getTodo(todoId: string){
+    const todo = await prisma.todo.findFirst({
+        where: {
+            id: parseInt(todoId)
+        },
+    });
+    if(!todo) return null;
+    return todo;
 }

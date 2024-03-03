@@ -4,11 +4,13 @@ import { addTodo } from "@/lib/db";
 
 export async function GET(request: Request){
     const todos = await prisma.todo.findMany();
-    return NextResponse.json(todos);
+    if(!todos) return NextResponse.json({"message": "Failed"}, {status: 404});
+    return NextResponse.json(todos, {status: 200})
 }
 
 export async function POST(request: Request){
     const data = await request.json();
     const todo = await addTodo(data.message)
-    return NextResponse.json("success");
+    if(!todo) return NextResponse.json({"message": "Failed"}, {status: 404});
+    return NextResponse.json(todo, {status: 200})
 }

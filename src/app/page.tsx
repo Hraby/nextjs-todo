@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_noStore } from "next/cache";
 import { Pencil, Trash2 } from "lucide-react";
 import {
   Table,
@@ -30,51 +30,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { addTodo, delTodo, editTodo, getTodos } from "@/lib/db";
 import { Label } from "@/components/ui/label";
-
-async function fetchData(){
-  const data = await getTodos();
-  return await data;
-}
+import { Checkbox } from "@/components/ui/checkbox";
+import {createPost, handleEdit, handleDelete, handleCheckbox} from "./action";
+import {fetchData} from "@/data/todos"
 
 export default async function Home() {
+  unstable_noStore();
+
   const data = await fetchData();
-
-  async function createPost(formData: FormData){
-    "use server"
-
-    const todoText = formData.get("todoText")
-    if (todoText) {
-      const todo = await addTodo(todoText.toString())
-    }
-    revalidatePath("/");
-  }
-
-  async function handleEdit(formData: FormData){
-    "use server"
-
-    const todoId = formData.get("id");
-    const todoText = formData.get("message");
-
-    if(todoId && todoText){
-      const todo = await editTodo(todoId.toString(), todoText.toString());
-    }
-    
-    revalidatePath("/");
-
-  }
-
-  async function handleDelete(formData: FormData){
-    "use server"
-
-    const todoId = formData.get("id");
-    if(todoId) {
-      const todo = await delTodo(todoId.toString());
-    }
-    revalidatePath("/");
-
-  }
 
   return (
     <main className="flex min-h-screen flex-col items-center">
@@ -97,73 +61,80 @@ export default async function Home() {
         <TableHeader>
           <TableRow>
             <TableHead>Todo</TableHead>
+            <TableHead></TableHead>
             <TableHead className="text-right w-[0px]"></TableHead>
             <TableHead className="text-right w-[0px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data && (
-            data.map((todo: any, index: number) => (
-              <TableRow key={index}>
-                <TableCell className="font-medium">{todo.message}</TableCell>
-                <TableCell className="text-right">
+        {data && data
+          .sort((a, b) => a.id - b.id) // Seřadit pole podle ID
+          .map((todo: any) => (
+            <TableRow key={todo.id}>
+              <TableCell className="w-[50px]">
+                <form action={handleCheckbox}>
+                  <input type="hidden" name="id" value={todo.id}/>
+                  <input type="hidden" name="status" value={todo.status}/>
+                  <Checkbox checked={todo.status === "on"} type="submit"/>
+                </form>
+              </TableCell>
+              <TableCell className={`font-medium ${todo.status === 'off' ? 'text-default' : 'text-slate-500'}`}>{todo.message}</TableCell>
+              <TableCell className="text-right">
                 <Dialog>
                   <DialogTrigger asChild>
                     <button><Pencil/></button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[425px]">
-                  <form action={handleEdit}>
-                    <DialogHeader>
-                      <DialogTitle>Upravit Todo</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="message">
-                          Zpráva
-                        </Label>
-                        <Input
-                          type="text"
-                          name="message"
-                          id="message"
-                          defaultValue={todo.message}
-                          className="col-span-3"
-                        />
+                    <form action={handleEdit}>
+                      <DialogHeader>
+                        <DialogTitle>Upravit Todo</DialogTitle>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="message">
+                            Zpráva
+                          </Label>
+                          <Input
+                            type="text"
+                            name="message"
+                            id="message"
+                            defaultValue={todo.message}
+                            className="col-span-3"
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button name="id" value={todo.id} type="submit">Uložit</Button>
-                      </DialogClose>
-                    </DialogFooter>
+                      <DialogFooter>
+                        <DialogClose asChild>
+                          <Button name="id" value={todo.id} type="submit">Uložit</Button>
+                        </DialogClose>
+                      </DialogFooter>
                     </form>
                   </DialogContent>
                 </Dialog>
-                </TableCell>
-                <TableCell className="text-right">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
+              </TableCell>
+              <TableCell className="text-right">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
                     <button><Trash2/></button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <form action={handleDelete}>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <form action={handleDelete}>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Jste si jistý?</AlertDialogTitle>
                         <AlertDialogDescription>
-                        Tuto akci nelze vzít zpět. Tím se trvale odstraní vaše
-                          a vaše data budou odstraněna z našich serverů.
+                          Tuto akci nelze vzít zpět. Tím se trvale odstraní vaše a vaše data budou odstraněna z našich serverů.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Zrušit</AlertDialogCancel>
-                        <AlertDialogAction><button name="id" value={todo.id} type="submit">Potvrdit</button></AlertDialogAction>
+                        <AlertDialogAction name="id" value={todo.id} type="submit">Potvrdit</AlertDialogAction>
                       </AlertDialogFooter>
-                      </form>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </TableCell>
-              </TableRow>
-              ))
-          )}
+                    </form>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
     </main>
